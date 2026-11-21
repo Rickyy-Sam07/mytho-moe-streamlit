@@ -19,19 +19,10 @@ def engine():
     return MythoEngine()
 
 
-def setting(name):
-    if value := os.environ.get(name):
-        return value
-    try:
-        return st.secrets.get(name)
-    except FileNotFoundError:
-        return None
-
-
 def remote_answer(space, query, modes):
     from gradio_client import Client
 
-    client = Client(space, token=setting("MYTHO_HF_TOKEN"), verbose=False,
+    client = Client(space, token=os.environ.get("MYTHO_HF_TOKEN"), verbose=False,
                     download_files=False, analytics_enabled=False)
     payload = client.submit(query, modes, api_name="/answer").result(timeout=240)
     if not isinstance(payload, dict) or set(payload) != set(modes):
@@ -136,7 +127,7 @@ with paper:
         show_benchmarks(summary, routing)
 
 with qa:
-    space = setting("MYTHO_SPACE")
+    space = os.environ.get("MYTHO_SPACE")
     local_models = all((MODELS / filename).is_file()
                        for filename, _ in (*ROUTER_FILES.values(), *ADAPTER_FILES.values()))
     sources = ["Live inference", "Saved benchmark"] if space or local_models else ["Saved benchmark"]
