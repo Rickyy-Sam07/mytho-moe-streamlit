@@ -172,12 +172,14 @@ class MythoEngine:
             ),
         )
         identities = mixed["identity"]["expert_hashes"]
+        # Read adapter tensors on CPU during ZeroGPU's startup CUDA emulation.
+        adapter_options = {"torch_device": "cpu"} if zero_gpu else {}
         self.model = PeftModel.from_pretrained(
             base, adapter_directory("hvm", identities["hvm"]), adapter_name="hvm",
-            is_trainable=False,
+            is_trainable=False, **adapter_options,
         )
         self.model.load_adapter(adapter_directory("rama", identities["rama"]), adapter_name="rama",
-                                is_trainable=False)
+                                is_trainable=False, **adapter_options)
         self.model.requires_grad_(False).eval()
         self.routers = {}
         for mode, state in states.items():
